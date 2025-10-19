@@ -5,7 +5,7 @@ service cloud.firestore {
     function isAuthed() { return request.auth != null; }
     function me() { return request.auth.uid; }
 
-    // Удобная функция: проверяет, что текущий юзер — участник звонка
+   
     function isCallParticipant(callId) {
       return isAuthed() && (
         get(/databases/$(db)/documents/calls/$(callId)).data.callerUid == me() ||
@@ -23,41 +23,36 @@ service cloud.firestore {
       }
     }
 
-    // ---------- CALLS (WebRTC signaling) ----------
+    
     match /calls/{callId} {
-      // создать звонок может только вызывающий
+      
       allow create: if isAuthed()
         && request.resource.data.callerUid == me()
         && request.resource.data.calleeUid is string
         && request.resource.data.callerUid != request.resource.data.calleeUid
         && request.resource.data.status == 'ringing';
 
-      // читать документ звонка может только участник
+    
       allow read: if isAuthed() && (
         resource.data.callerUid == me() || resource.data.calleeUid == me()
       );
 
-      // обновлять документ звонка могут только участники,
-      // причём разрешаем менять ТОЛЬКО эти поля (без трогания участников):
+     
       allow update: if isAuthed()
         && (resource.data.callerUid == me() || resource.data.calleeUid == me())
         && request.resource.data.diff(resource.data).changedKeys()
              .hasOnly(['offer','answer','status']);
 
-      // удалять тоже только участники
+     
       allow delete: if isAuthed()
         && (resource.data.callerUid == me() || resource.data.calleeUid == me());
 
-      // ← ЭТО ВАЖНО: подколлекция с кандидатами,
-      // которой пользуется ваш код: /calls/{callId}/candidates
+     
       match /candidates/{cid} {
         allow read, write: if isCallParticipant(callId);
       }
 
-      // (Если хотите, можете также оставить совместимость
-      // с callerCandidates / calleeCandidates)
-      // match /callerCandidates/{cid} { allow read, write: if isCallParticipant(callId); }
-      // match /calleeCandidates/{cid} { allow read, write: if isCallParticipant(callId); }
+     
     }
 
     // ---------- ROOMS ----------
