@@ -3,22 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserAvatar extends StatelessWidget {
-  /// Вариант 1: грузим профиль по uid из Firestore (users/{uid})
+
   final String? uid;
 
-  /// Вариант 2: рисуем напрямую по ссылке на фото
+  
   final String? photoUrl;
 
-  /// Имя/подпись для инициалов (если нет фото)
+  
   final String? name;
 
-  /// alias к name — если где-то уже используется title
+  
   final String? title;
 
-  /// Размер аватарки (диаметр). Если указан radius — он приоритетнее.
+ 
   final double size;
 
-  /// Alias как у CircleAvatar: radius = size / 2
+ 
   final double? radius;
 
   final VoidCallback? onTap;
@@ -55,7 +55,7 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    // Иначе рисуем по переданным параметрам
+    
     return _buildCircle(
       url: photoUrl ?? '',
       label: name ?? title ?? '',
