@@ -1,0 +1,31 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "quickchat-86c7b",
+          "appId": "1:1045888649731:android:bb1c435de8d74bd7ad1c36",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "quickchat-86c7b",
+          "configurations": {
+            "android": "1:1045888649731:android:bb1c435de8d74bd7ad1c36",
+            "ios": "1:1045888649731:ios:65c0cd447d86ec7bad1c36",
+            "web": "1:1045888649731:web:b761fc35827e8c4aad1c36",
+            "windows": "1:1045888649731:web:4af65fdaecfb5083ad1c36"
+          }
+        }
+      }
+    }
+  }
+}

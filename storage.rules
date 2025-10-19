@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthed() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+
+    // ---------- АВАТАРЫ ----------
+    // Храним как /avatars/{uid}.jpg (или .png/.webp).
+    // Матчим весь сегмент как {file} и проверяем, что он начинается с моим uid и допустимым расширением.
+    match /avatars/{file} {
+      allow read: if isAuthed();
+      allow write: if isAuthed()
+        && file.matches('^' + me() + '\\.(jpg|jpeg|png|webp)$')
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|jpg|png|webp)');
+    }
+
+    // ---------- КАРТИНКИ В ЧАТАХ ----------
+    // /chat_images/{roomId}/{fileName}
+    match /chat_images/{roomId}/{fileName} {
+      allow read: if isAuthed() && (
+        firestore.get(/databases/(default)/documents/rooms/$(roomId)).data.type == 'public' ||
+        firestore.get(/databases/(default)/documents/rooms/$(roomId)).data.participants.hasAny([me()])
+      );
+
+      allow write: if isAuthed()
+        && firestore.get(/databases/(default)/documents/rooms/$(roomId)).data.participants.hasAny([me()])
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|jpg|png|webp)');
+    }
+
+    // ---------- ГОЛОСОВЫЕ ----------
+    // /chat_audio/{roomId}/{fileName}
+    match /chat_audio/{roomId}/{fileName} {
+      allow read: if isAuthed() && (
+        firestore.get(/databases/(default)/documents/rooms/$(roomId)).data.type == 'public' ||
+        firestore.get(/databases/(default)/documents/rooms/$(roomId)).data.participants.hasAny([me()])
+      );
+
+      allow write: if isAuthed()
+        && firestore.get(/databases/(default)/documents/rooms/$(roomId)).data.participants.hasAny([me()])
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('audio/(mpeg|mp4|aac|webm|ogg|x-m4a|3gpp)');
+    }
+
+    // ---------- Остальное запрещено ----------
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

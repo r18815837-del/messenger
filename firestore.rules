@@ -1,0 +1,125 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function isAuthed() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+
+    // Удобная функция: проверяет, что текущий юзер — участник звонка
+    function isCallParticipant(callId) {
+      return isAuthed() && (
+        get(/databases/$(db)/documents/calls/$(callId)).data.callerUid == me() ||
+        get(/databases/$(db)/documents/calls/$(callId)).data.calleeUid == me()
+      );
+    }
+
+    // ---------- USERS ----------
+    match /users/{uid} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && me() == uid;
+
+      match /tokens/{token} {
+        allow read, write: if isAuthed() && me() == uid;
+      }
+    }
+
+    // ---------- CALLS (WebRTC signaling) ----------
+    match /calls/{callId} {
+      // создать звонок может только вызывающий
+      allow create: if isAuthed()
+        && request.resource.data.callerUid == me()
+        && request.resource.data.calleeUid is string
+        && request.resource.data.callerUid != request.resource.data.calleeUid
+        && request.resource.data.status == 'ringing';
+
+      // читать документ звонка может только участник
+      allow read: if isAuthed() && (
+        resource.data.callerUid == me() || resource.data.calleeUid == me()
+      );
+
+      // обновлять документ звонка могут только участники,
+      // причём разрешаем менять ТОЛЬКО эти поля (без трогания участников):
+      allow update: if isAuthed()
+        && (resource.data.callerUid == me() || resource.data.calleeUid == me())
+        && request.resource.data.diff(resource.data).changedKeys()
+             .hasOnly(['offer','answer','status']);
+
+      // удалять тоже только участники
+      allow delete: if isAuthed()
+        && (resource.data.callerUid == me() || resource.data.calleeUid == me());
+
+      // ← ЭТО ВАЖНО: подколлекция с кандидатами,
+      // которой пользуется ваш код: /calls/{callId}/candidates
+      match /candidates/{cid} {
+        allow read, write: if isCallParticipant(callId);
+      }
+
+      // (Если хотите, можете также оставить совместимость
+      // с callerCandidates / calleeCandidates)
+      // match /callerCandidates/{cid} { allow read, write: if isCallParticipant(callId); }
+      // match /calleeCandidates/{cid} { allow read, write: if isCallParticipant(callId); }
+    }
+
+    // ---------- ROOMS ----------
+    match /rooms/{roomId} {
+      allow read: if isAuthed() && (
+        resource.data.type == 'public' ||
+        (resource.data.participants != null && resource.data.participants.hasAny([me()]))
+      );
+
+      allow create: if isAuthed() && (
+        request.resource.data.type == 'public' ||
+        (request.resource.data.type == 'dm' &&
+         request.resource.data.participants is list &&
+         request.resource.data.participants.hasAny([me()])) ||
+        (request.resource.data.type == 'group' &&
+         request.resource.data.ownerUid == me() &&
+         request.resource.data.admins[me()] == true &&
+         request.resource.data.participants.size() == 1 &&
+         request.resource.data.participants[0] == me())
+      );
+
+      allow update: if isAuthed() && (
+        (resource.data.type == 'group' &&
+         resource.data.participants.hasAny([me()]) &&
+         (
+           request.resource.data.diff(resource.data).changedKeys().hasOnly(['typing','updatedAt'])
+           ||
+           (resource.data.admins[me()] == true &&
+            request.resource.data.type == resource.data.type &&
+            request.resource.data.ownerUid == resource.data.ownerUid)
+         )
+        )
+        ||
+        (resource.data.type in ['dm','public'] &&
+         resource.data.participants.hasAny([me()]))
+      );
+
+      allow delete: if isAuthed() &&
+        resource.data.type == 'group' &&
+        resource.data.ownerUid == me();
+
+      match /messages/{msgId} {
+        allow read, create: if isAuthed() &&
+          (
+            get(/databases/$(db)/documents/rooms/$(roomId)).data.type == 'public' ||
+            me() in get(/databases/$(db)/documents/rooms/$(roomId)).data.participants
+          ) &&
+          (request.method != 'create' || request.resource.data.uid == me());
+
+        allow update, delete: if isAuthed() &&
+          me() == resource.data.uid &&
+          (
+            get(/databases/$(db)/documents/rooms/$(roomId)).data.type == 'public' ||
+            me() in get(/databases/$(db)/documents/rooms/$(roomId)).data.participants
+          );
+      }
+
+      match /members/{uid} {
+        allow read, write: if isAuthed() &&
+          uid == me() &&
+          get(/databases/$(db)/documents/rooms/$(roomId)).data.participants.hasAny([me()]);
+      }
+    }
+  }
+}
