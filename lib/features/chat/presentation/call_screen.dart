@@ -10,9 +10,9 @@ import 'package:permission_handler/permission_handler.dart';
 
 class CallScreen extends StatefulWidget {
   final bool isCaller;
-  final String? calleeUid; // если я инициирую звонок
-  final String? callerUid; // если звонят мне
-  final String? callId;    // id документа calls/{callId}
+  final String? calleeUid; 
+  final String? callerUid; 
+  final String? callId;    
   final bool video;
 
   const CallScreen._internal({
@@ -38,7 +38,7 @@ class CallScreen extends StatefulWidget {
     );
   }
 
-  /// Получатель (входящий) — создаётся из listener-а входящих
+  
   factory CallScreen.receiver({
     Key? key,
     required String callId,
@@ -63,23 +63,23 @@ class _CallScreenState extends State<CallScreen> {
   final _me = FirebaseAuth.instance.currentUser!;
   final _db = FirebaseFirestore.instance;
 
-  // ---- WebRTC ----
+
   final _localRenderer = RTCVideoRenderer();
   final _remoteRenderer = RTCVideoRenderer();
   RTCPeerConnection? _pc;
   MediaStream? _localStream;
 
-  // входящий — пока не приняли
+  
   bool _incoming = false;
   bool _accepted = false;
   Map<String, dynamic>? _incomingOffer;
   final List<RTCIceCandidate> _pendingRemoteCandidates = [];
 
-  // ---- сигналинг ----
+ 
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _docSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _candsSub;
 
-  // ---- состояние ----
+  
   String? _callId;
   String _status = 'Подключение…';
   bool _micOn = true;
@@ -90,7 +90,7 @@ class _CallScreenState extends State<CallScreen> {
   AudioPlayer? _ring;
   Timer? _callTimeout;
 
-  // STUN/TURN (замени на свой TURN в проде)
+ 
   final Map<String, dynamic> _rtcConfig = const {
     'iceServers': [
       {'urls': 'stun:stun.l.google.com:19302'},
@@ -124,14 +124,14 @@ class _CallScreenState extends State<CallScreen> {
 
   @override
   void dispose() {
-    _endAndPop(); // идемпотентно
+    _endAndPop(); 
     try { WakelockPlus.disable(); } catch (_) {}
     try { _localRenderer.dispose(); } catch (_) {}
     try { _remoteRenderer.dispose(); } catch (_) {}
     super.dispose();
   }
 
-  // ---------- helpers ----------
+  
   Future<void> _initRenderers() async {
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
@@ -156,7 +156,7 @@ class _CallScreenState extends State<CallScreen> {
   Future<void> _createPc() async {
     _pc = await createPeerConnection(_rtcConfig);
 
-    // Хотим и слать, и принимать медиа
+    
     await _pc!.addTransceiver(
       kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
       init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendRecv),
@@ -211,7 +211,7 @@ class _CallScreenState extends State<CallScreen> {
     return media;
   }
 
-  // ---------- Рингтон ----------
+ 
   Future<void> _startRinging({required bool outgoing}) async {
     try {
       _ring?.dispose();
@@ -221,7 +221,7 @@ class _CallScreenState extends State<CallScreen> {
       await _ring!.play();
     } catch (_) {}
 
-    // таймаут ответа 35 сек
+  
     _callTimeout?.cancel();
     _callTimeout = Timer(const Duration(seconds: 35), () async {
       if (mounted && _status != 'Соединено') {
@@ -245,7 +245,7 @@ class _CallScreenState extends State<CallScreen> {
     _callTimeout = null;
   }
 
-  // ===================== CALLER FLOW =====================
+ 
   Future<void> _startAsCaller() async {
     setState(() => _status = 'Вызов…');
 
@@ -256,7 +256,7 @@ class _CallScreenState extends State<CallScreen> {
       await _pc!.addTrack(t, _localStream!);
     }
 
-    // создаём документ звонка
+  
     final ref = _db.collection('calls').doc();
     _callId = ref.id;
 
@@ -275,7 +275,7 @@ class _CallScreenState extends State<CallScreen> {
 
     await _startRinging(outgoing: true);
 
-    // ждём answer/окончание
+    
     _docSub?.cancel();
     _docSub = ref.snapshots().listen((ds) async {
       final d = ds.data();
@@ -308,7 +308,7 @@ class _CallScreenState extends State<CallScreen> {
       }
     });
 
-    // ICE от собеседника
+  
     _candsSub?.cancel();
     _candsSub = ref
         .collection('candidates')
@@ -336,7 +336,7 @@ class _CallScreenState extends State<CallScreen> {
     });
   }
 
-  // ===================== INCOMING (ожидание «принять/отклонить») =====================
+  
   Future<void> _prepareIncoming() async {
     final ref = _db.collection('calls').doc(widget.callId);
     _callId = ref.id;
@@ -358,7 +358,7 @@ class _CallScreenState extends State<CallScreen> {
 
     await _startRinging(outgoing: false);
 
-    // следим за завершением
+    
     _docSub?.cancel();
     _docSub = ref.snapshots().listen((snap) {
       final data = snap.data();
@@ -370,7 +370,7 @@ class _CallScreenState extends State<CallScreen> {
       }
     });
 
-    // буферим ICE до принятия
+   
     _candsSub?.cancel();
     _candsSub = ref
         .collection('candidates')
@@ -390,10 +390,10 @@ class _CallScreenState extends State<CallScreen> {
       }
     });
 
-    setState(() {}); // показать кнопки Принять/Отклонить
+    setState(() {});
   }
 
-  // ===================== Принять / Отклонить =====================
+ 
   Future<void> _acceptCall() async {
     if (_accepted) return;
     _accepted = true;
@@ -410,7 +410,7 @@ class _CallScreenState extends State<CallScreen> {
       await _pc!.addTrack(t, _localStream!);
     }
 
-    // применяем сохранённый offer
+   
     final offer = RTCSessionDescription(_incomingOffer!['sdp'], _incomingOffer!['type']);
     await _pc!.setRemoteDescription(offer);
 
@@ -430,7 +430,7 @@ class _CallScreenState extends State<CallScreen> {
       'status': 'accepted',
     });
 
-    // дальше уже в onTrack / onConnectionState поставится Соединено
+    
     setState(() {});
   }
 
@@ -445,7 +445,7 @@ class _CallScreenState extends State<CallScreen> {
     _endAndPop();
   }
 
-  // ===================== UI actions =====================
+ 
   void _toast(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -522,7 +522,7 @@ class _CallScreenState extends State<CallScreen> {
     if (mounted) Navigator.of(context).maybePop();
   }
 
-  // ===================== UI =====================
+ 
   @override
   Widget build(BuildContext context) {
     final isVideo = widget.video;
@@ -557,7 +557,7 @@ class _CallScreenState extends State<CallScreen> {
               ),
             ),
 
-            // LOCAL PIP
+            
             if (isVideo)
               Positioned(
                 top: 24,
@@ -576,7 +576,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
               ),
 
-            // ПАНЕЛЬ «Принять / Отклонить» (входящий, не принят)
+           
             if (_incoming && !_accepted)
               Positioned(
                 left: 0,
@@ -600,7 +600,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
               ),
 
-            // Основные контролы (исходящий ИЛИ входящий принят)
+           
             if (!_incoming || _accepted)
               Positioned(
                 left: 0,
