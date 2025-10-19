@@ -1,6 +1,6 @@
 // lib/features/chat/presentation/chat_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Clipboard
+import 'package:flutter/services.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -9,18 +9,18 @@ import 'dart:async';
 import 'package:mime/mime.dart';
 import 'package:untitled/features/chat/presentation/call_screen.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:record/record.dart';// v5 API (AudioRecorder)
+import 'package:record/record.dart';
 import 'package:any_link_preview/any_link_preview.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:just_audio/just_audio.dart';// плеер для голосовых
+import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:path_provider/path_provider.dart';// для Uint8List
+import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:untitled/core/widgets/user_avatar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:untitled/shared/utils/room_id.dart'; // isDirectRoom / otherUidFromRoom
+import 'package:untitled/shared/utils/room_id.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:untitled/features/chat/presentation/fullscreen_image_screen.dart';
 
@@ -32,7 +32,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 class _ChatScreenState extends State<ChatScreen> {
-  // --- базовые контроллеры/состояния ---
+
   final TextEditingController _c = TextEditingController();
   final ScrollController _scroll = ScrollController();
   final FocusNode _inputFocus = FocusNode();
@@ -45,51 +45,51 @@ class _ChatScreenState extends State<ChatScreen> {
   Timer? _typingTimer;
   bool _showJumpToBottom = false;
 
-  // поиск
+  
   bool _searchMode = false;
   String _query = '';
 
-  // --- голосовые (record v5) ---
+  
   final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
   int _recMs = 0;
   Timer? _recTimer;
   String? _recPath;
 
-  // --- аудио-плееры (just_audio) ---
+  
   final Map<String, AudioPlayer> _audioPlayers = {};
-  final Map<String, double> _audioSpeed = {}; // скорость на сообщение, по умолчанию 1.0
+  final Map<String, double> _audioSpeed = {}; 
   final Set<String> _audioInited = {};
   String? _playingId;
 
-  // --- загрузки (фото/аудио/файлы) ---
+  
   UploadTask? _currentUpload;
   double? _uploadProgress;
 
-  // --- тип комнаты и участники (для групп/DM) ---
+  
   // ignore: prefer_final_fields
   String _roomType = 'public';
-  // ignore: prefer_final_fields
+ 
   Map<String, dynamic> _participantsInfo = {};
 
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _roomSub;
 
-  // --- сеть (баннер «нет соединения») ---
+  
   bool _offline = false;
   StreamSubscription<List<ConnectivityResult>>? _connSub;
 
-  // --- Firestore refs ---
+ 
   late final DocumentReference<Map<String, dynamic>> _roomRef;
   late final DocumentReference<Map<String, dynamic>> _myMemberRef;
 
-  // форматтер мм:сс
+  
   String _fmtMs(int ms) {
     final s = (ms ~/ 1000) % 60;
     final m = (ms ~/ 1000) ~/ 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  // коллекция сообщений текущей комнаты
+  
   CollectionReference<Map<String, dynamic>> get _messagesCol =>
       FirebaseFirestore.instance
           .collection('rooms')
@@ -121,7 +121,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     });
 
-// опционально: выставить состояние сразу при запуске
+
     Connectivity().checkConnectivity().then((results) {
       if (!mounted) return;
       final hasConnection = results.any((r) => r != ConnectivityResult.none);
@@ -129,7 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
 
-    _markSeen();              // отметим прочитано при входе
+    _markSeen();              
     _scroll.addListener(_onScroll);
     _initAudioSession();
 
@@ -164,14 +164,14 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _limit += 50);
     }
 
-    // показываем кнопку, если ушли от низа > 200px
+    
     final show = _scroll.position.pixels > 200;
     if (show != _showJumpToBottom) {
       setState(() => _showJumpToBottom = show);
     }
   }
 
-// ← ОСТАВЬ ТОЛЬКО ОДНУ ВЕРСИЮ markSeen
+
   Future<void> _markSeen() async {
     try {
       await _myMemberRef.set({
@@ -187,13 +187,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    // Таймеры/подписки
+    
     _typingTimer?.cancel();
     _roomSub?.cancel();
     _connSub?.cancel();
-    _recTimer?.cancel(); // таймер записи
+    _recTimer?.cancel(); 
 
-    // Если шла запись — остановим и почистим временный файл
+    
     if (_isRecording) {
       unawaited(_recorder.stop());
     }
@@ -202,12 +202,12 @@ class _ChatScreenState extends State<ChatScreen> {
       try { File(_recPath!).deleteSync(); } catch (_) {}
     }
 
-    // Если шла загрузка (фото/аудио) — отменим
+   
     try { _currentUpload?.cancel(); } catch (_) {}
     _currentUpload = null;
     _uploadProgress = null;
 
-    // Сбросить "печатает…"
+    
     final me = FirebaseAuth.instance.currentUser;
     if (me != null) {
       _roomRef.set({'typing': {me.uid: false}}, SetOptions(merge: true));
@@ -215,7 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
 
-    // UI ресурсы
+   
     _scroll.removeListener(_onScroll);
     _scroll.dispose();
     _c.dispose();
@@ -232,7 +232,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
   String? _extractFirstUrl(String text) {
     final re = RegExp(
-      r'(https?://[^\s<>")\]\}]+)', // без экранирования / и с отсечением мусора
+      r'(https?://[^\s<>")\]\}]+)',
       caseSensitive: false,
     );
     final m = re.firstMatch(text);
@@ -281,12 +281,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final me = FirebaseAuth.instance.currentUser;
     if (me == null) return;
 
-    // Сразу отмечаем "печатает"
+    
     _roomRef.set({
       'typing': {me.uid: true},
     }, SetOptions(merge: true));
 
-    // Сбрасываем через 2 секунды (debounce)
+   
     _typingTimer?.cancel();
     _typingTimer = Timer(const Duration(seconds: 2), () {
       _roomRef.set({
@@ -351,7 +351,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Конфигурация под голос/речь (подходит для голосовых сообщений)
       await session.configure(const AudioSessionConfiguration.speech());
     } catch (_) {
-      // опционально: debugPrint('AudioSession init failed: $_');
+     
     }
   }
 
@@ -394,7 +394,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
   Widget _highlighted(String text) {
     final q = _query.trim().toLowerCase();
-    final urlRe = RegExp(r'(https?:\/\/[^\s]+)'); // без лишних экранирований
+    final urlRe = RegExp(r'(https?:\/\/[^\s]+)'); 
 
     final List<InlineSpan> spans = [];
     int index = 0;
@@ -405,7 +405,7 @@ class _ChatScreenState extends State<ChatScreen> {
         spans.add(TextSpan(text: raw));
         return;
       }
-      // подсветка совпадений поиска
+      
       final lower = raw.toLowerCase();
       int start = 0;
       while (true) {
@@ -605,7 +605,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }, SetOptions(merge: true));
 
     } catch (e) {
-      // используем messenger, а не context
+      
       messenger.showSnackBar(SnackBar(content: Text('Не удалось отправить файл: $e')));
     } finally {
       if (mounted) {
@@ -829,16 +829,16 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 👉 РЕАКЦИЯ
+                
                 ListTile(
                   leading: const Icon(Icons.add_reaction),
                   title: const Text('Реакция'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _pickReaction(msgId); // <-- этот метод добавим ниже
+                    _pickReaction(msgId);
                   },
                 ),
-                // 👉 ОТВЕТИТЬ
+               
                 ListTile(
                   leading: const Icon(Icons.reply),
                   title: const Text('Ответить'),
@@ -850,7 +850,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                 ),
-                // КОПИРОВАТЬ
+              
                 ListTile(
                   leading: const Icon(Icons.content_copy),
                   title: const Text('Копировать'),
@@ -888,10 +888,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _audioBubble(String id, String url, {int? durationMs}) {
-    // Гарантированно получаем не-null плеер
+    
     final AudioPlayer player = _audioPlayers.putIfAbsent(id, () => AudioPlayer());
 
-    // Инициализируем источник и слушатель только один раз на id
+    
     if (_audioInited.add(id)) {
       player.setUrl(url).catchError((_) => null);
       player.playerStateStream.listen((st) async {
@@ -944,7 +944,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     icon: Icon(playing ? Icons.pause_circle_filled : Icons.play_circle_fill),
                     iconSize: 32,
                     onPressed: () async {
-                      // ставим на паузу другой плеер, если играет
+                      
                       if (_playingId != null && _playingId != id) {
                         final other = _audioPlayers[_playingId!];
                         await other?.pause();
@@ -954,7 +954,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         await player.pause();
                       } else {
                         final dur = player.duration ?? total;
-                        if (pos >= dur) {                     // ✅
+                        if (pos >= dur) {                     
                           await player.seek(Duration.zero);
                         }
                         await player.play();
@@ -980,7 +980,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
 
-                  // ⬇️ НОВОЕ: кнопка скорости
+                 
                   TextButton(
                     onPressed: () async {
                       final cur = _audioSpeed[id] ?? 1.0;
@@ -1053,7 +1053,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
 
-          // Прогресс текущей загрузки (если идёт)
+          
           if (_currentUpload != null)
             Container(
               margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -1082,7 +1082,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
 
-          // Панель записи голосового (показывается только при записи)
+         
           if (_isRecording)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1113,7 +1113,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
 
-          // Ряд с полем и кнопками
+          
           Row(
             children: [
               IconButton(
@@ -1145,7 +1145,7 @@ class _ChatScreenState extends State<ChatScreen> {
               IconButton(
                 tooltip: 'Файл',
                 icon: const Icon(Icons.attach_file),
-                onPressed: _sending ? null : _pickAndSendFile, // ← новый метод
+                onPressed: _sending ? null : _pickAndSendFile, 
               ),
 
               IconButton(
@@ -1191,7 +1191,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
 
-          // Панель эмодзи
+          
           if (_showEmoji)
             SizedBox(
               height: 280,
@@ -1244,7 +1244,7 @@ class _ChatScreenState extends State<ChatScreen> {
               List<QueryDocumentSnapshot<Map<String, dynamic>>> docs =
                   snap.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[];
 
-              // локальный поиск по тексту
+              
               if (_query.isNotEmpty) {
                 final q = _query.toLowerCase();
                 docs = docs.where((d) {
@@ -1275,13 +1275,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       final clientTs = (m['clientTs'] as int?) ?? 0;
                       final edited = (m['edited'] as bool?) == true;
 
-                      // локальная запись (ещё не на сервере)
+                     
                       final bool isSendingLocal = doc.metadata.hasPendingWrites;
 
-                      // --- ГРУППОВОЙ РЕЖИМ ---
+                     
                       final bool isGroup = _roomType == 'group';
 
-                      // вложения
+                     
                       final imageUrl = (m['imageUrl'] as String?) ?? '';
                       final audioUrl = (m['audioUrl'] as String?) ?? '';
                       final String fileUrl = (m['fileUrl'] as String?) ?? '';
@@ -1291,7 +1291,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           (m['contentType'] as String?) ?? 'application/octet-stream';
                       final int? durationMs = m['durationMs'] as int?;
 
-                      // автор
+                   
                       final String authorUid = (m['uid'] as String?) ?? '';
                       final Map<String, dynamic> authorInfo =
                           (_participantsInfo[authorUid] as Map<String, dynamic>?) ?? const {};
@@ -1299,7 +1299,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           (authorInfo['displayName'] as String?) ?? email;
                       final String? authorPhoto = authorInfo['photoUrl'] as String?;
 
-                      // ответ
+                 
                       final Map<String, dynamic>? reply =
                       m['replyTo'] is Map ? (m['replyTo'] as Map).cast<String, dynamic>() : null;
                       final String repliedText =
@@ -1307,12 +1307,12 @@ class _ChatScreenState extends State<ChatScreen> {
                       final String? repliedId = reply?['id'] as String?;
                       final key = _msgKeys.putIfAbsent(doc.id, () => GlobalKey());
 
-                      // прочитано собеседником (для моих сообщений в ЛС)
+                     
                       final readByOther = isMe && isDirectRoom(widget.roomId)
                           ? (otherLastReadMs >= clientTs)
                           : false;
 
-                      // реакции: reactions: { "👍": {uid1:true, uid2:true}, "❤️": {...} }
+                      
                       final Map<String, dynamic> reactionsRaw =
                           (m['reactions'] as Map?)?.cast<String, dynamic>() ?? {};
                       final myUid = me?.uid;
@@ -1361,10 +1361,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         }
                       });
 
-                      // основной контент сообщения
+                     
                       Widget messageContent;
                       if (type == 'file' && fileUrl.isNotEmpty) {
-                        // 📎 файл
+                       
                         final kb = (fileSize / 1024).toStringAsFixed(0);
                         messageContent = InkWell(
                           onTap: () => _openUrl(fileUrl),
@@ -1409,11 +1409,11 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         );
                       } else if (type == 'audio' && audioUrl.isNotEmpty) {
-                        // 🔊 аудио
+                        
                         messageContent =
                             _audioBubble(doc.id, audioUrl, durationMs: durationMs);
                       } else if (type == 'image' && imageUrl.isNotEmpty) {
-                        // 🖼️ картинка + (опционально) подпись
+                        
                         final tag = 'img_${doc.id}';
                         Widget img = GestureDetector(
                           onTap: () {
@@ -1468,11 +1468,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         )
                             : img;
                       } else {
-                        // 📝 обычный текст
+                       
                         messageContent = _highlighted(text);
                       }
 
-                      // OG-превью ссылки (если нашлась)
+                     
                       Widget? linkPreview;
                       if (type == 'text' && text.isNotEmpty) {
                         final urlInText = _extractFirstUrl(text);
@@ -1507,7 +1507,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         }
                       }
 
-                      // локальная переменная для свайпа-ответа
+                     
                       double dragDx = 0;
 
                       return KeyedSubtree(
@@ -1519,7 +1519,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             onHorizontalDragUpdate: (details) {
                               if (!isMe && details.primaryDelta != null) {
                                 final delta = details.primaryDelta!;
-                                if (delta > 0) dragDx += delta; // накапливаем свайп вправо
+                                if (delta > 0) dragDx += delta; 
                               }
                             },
                             onHorizontalDragEnd: (_) {
@@ -1560,7 +1560,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       ? CrossAxisAlignment.end
                                       : CrossAxisAlignment.start,
                                   children: [
-                                    // превью ответа
+                                   
                                     if (repliedText.isNotEmpty)
                                       InkWell(
                                         onTap: repliedId != null
@@ -1591,7 +1591,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                           ),
                                         ),
                                       ),
-                                    // шапка для групп (аватар + имя) — только у чужих сообщений
+                                   
                                     if (isGroup && !isMe) ...[
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -1616,10 +1616,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                       const SizedBox(height: 2),
                                     ],
 
-                                    // контент: текст/картинка/аудио/файл
+                                    
                                     messageContent,
 
-                                    // OG-превью ссылки
+                                    
                                     if (linkPreview != null) linkPreview,
 
                                     if (edited)
@@ -1683,7 +1683,7 @@ class _ChatScreenState extends State<ChatScreen> {
             },
           ),
         ),
-        _composer(), // поле ввода + кнопка
+        _composer(),
       ],
     );
   }
@@ -1697,7 +1697,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        // ОСТАВЛЯЕМ твой заголовок с typing/online
+        
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1714,7 +1714,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     return const Text('печатает…', style: TextStyle(fontSize: 12));
                   }
 
-                  // статус собеседника (optional)
+                 
                   return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                     stream: FirebaseFirestore.instance.collection('users').doc(otherUid).snapshots(),
                     builder: (context, uSnap) {
@@ -1737,7 +1737,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
 
-        // ДОБАВЛЯЕМ кнопку поиска + logout
+       
         actions: [
           IconButton(
             tooltip: _searchMode ? 'Закрыть поиск' : 'Поиск',
@@ -1749,7 +1749,7 @@ class _ChatScreenState extends State<ChatScreen> {
               });
             },
           ),
-          // ⬇️ ДОБАВЛЕНО: Кнопка звонка только для DM
+          
           if (isDm && otherUid != null)
             IconButton(
               tooltip: 'Аудио/видео звонок',
@@ -1810,7 +1810,7 @@ class _ChatScreenState extends State<ChatScreen> {
           : _chatBody(0),
     );
   }
-}// ===== конец класса _ChatScreenState =====
+}
 
 
 class _SearchBar extends StatelessWidget {
@@ -1831,7 +1831,7 @@ class _SearchBar extends StatelessWidget {
           border: OutlineInputBorder(),
           isDense: true,
         ),
-        onChanged: onChanged, // <-- передаем наверх
+        onChanged: onChanged,
       ),
     );
   }
