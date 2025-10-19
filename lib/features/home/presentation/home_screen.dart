@@ -55,7 +55,7 @@ class HomeScreen extends StatelessWidget {
     }
 
     try {
-      // 1) находим пользователя по emailLower
+   
       final q = await FirebaseFirestore.instance
           .collection('users')
           .where('emailLower', isEqualTo: email.toLowerCase())
@@ -75,10 +75,10 @@ class HomeScreen extends StatelessWidget {
       final otherUid = other['uid'] as String;
       final otherEmail = (other['email'] as String?) ?? email;
 
-      // 2) формируем детерминированный roomId для лички
+     
       final roomId = directRoomId(me.uid, otherUid);
 
-      // 3) создаём/обновляем комнату
+     
       await FirebaseFirestore.instance.collection('rooms').doc(roomId).set({
         'roomId': roomId,
         'type': 'dm',
@@ -91,7 +91,7 @@ class HomeScreen extends StatelessWidget {
         'lastMessage': '',
       }, SetOptions(merge: true));
 
-      // 4) открываем экран переписки
+      
       if (context.mounted) {
         Navigator.push(
           context,
@@ -111,8 +111,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final me = FirebaseAuth.instance.currentUser!;
 
-    // Комнаты, где участвует текущий пользователь.
-    // Без orderBy, чтобы не требовать композитный индекс (проще стартануть).
+   
     final roomsStream = FirebaseFirestore.instance
         .collection('rooms')
         .where('participants', arrayContains: me.uid)
@@ -152,7 +151,7 @@ class HomeScreen extends StatelessWidget {
           }
           final docs = snap.data?.docs ?? [];
 
-          // Сортируем по updatedAt у себя (раз уж убрали orderBy)
+        
           docs.sort((a, b) {
             final at = (a.data()['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
             final bt = (b.data()['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -177,7 +176,7 @@ class HomeScreen extends StatelessWidget {
               if (roomId == 'public' || type == 'public') {
                 title = 'Public чат';
               } else {
-                // показываем email собеседника
+                
                 title = _titleForDm(d, me.uid);
               }
 
