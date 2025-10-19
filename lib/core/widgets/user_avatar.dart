@@ -38,7 +38,7 @@ class UserAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveSize = radius != null ? radius! * 2 : size;
 
-    // Если передан uid — читаем профиль из Firestore
+  
     if (uid != null) {
       final ref = FirebaseFirestore.instance.collection('users').doc(uid);
       return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
