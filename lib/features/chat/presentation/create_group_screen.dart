@@ -41,8 +41,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               onPressed: _saving
                   ? null
                   : () async {
-                final nav = Navigator.of(context);                // <— сохраняем заранее
-                final messenger = ScaffoldMessenger.of(context);  // <— и это тоже
+                final nav = Navigator.of(context);                
+                final messenger = ScaffoldMessenger.of(context);  
                 final title = _title.text.trim();
                 if (title.isEmpty) {
                   messenger.showSnackBar(const SnackBar(content: Text('Введите название')));
