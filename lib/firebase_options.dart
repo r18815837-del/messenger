@@ -4,16 +4,6 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -44,39 +34,39 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCLFCUE3H_zv7oPLxvANVIJNPqYlnPreR0',
-    appId: '1:1045888649731:web:b761fc35827e8c4aad1c36',
-    messagingSenderId: '1045888649731',
-    projectId: 'quickchat-86c7b',
-    authDomain: 'quickchat-86c7b.firebaseapp.com',
-    storageBucket: 'quickchat-86c7b.firebasestorage.app',
-    measurementId: 'G-PLEL8GL3RL',
+    apiKey: '0',
+    appId: '',
+    messagingSenderId: '10',
+    projectId: '',
+    authDomain: '',
+    storageBucket: '',
+    measurementId: '',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBYiXvzDOGFOdwKOf5u7vf3rkDgWO-1pAM',
-    appId: '1:1045888649731:android:bb1c435de8d74bd7ad1c36',
-    messagingSenderId: '1045888649731',
-    projectId: 'quickchat-86c7b',
-    storageBucket: 'quickchat-86c7b.firebasestorage.app',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    storageBucket: '',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBMfeB_mmz1GDVTqO9CWmcpiM0jWhrF4rk',
-    appId: '1:1045888649731:ios:65c0cd447d86ec7bad1c36',
-    messagingSenderId: '1045888649731',
-    projectId: 'quickchat-86c7b',
-    storageBucket: 'quickchat-86c7b.firebasestorage.app',
-    iosBundleId: 'com.example.untitled',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    storageBucket: '',
+    iosBundleId: '',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCLFCUE3H_zv7oPLxvANVIJNPqYlnPreR0',
-    appId: '1:1045888649731:web:4af65fdaecfb5083ad1c36',
-    messagingSenderId: '1045888649731',
-    projectId: 'quickchat-86c7b',
-    authDomain: 'quickchat-86c7b.firebaseapp.com',
-    storageBucket: 'quickchat-86c7b.firebasestorage.app',
-    measurementId: 'G-M7YQ43KVK7',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    authDomain: '',
+    storageBucket: '',
+    measurementId: '',
   );
 }
