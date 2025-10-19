@@ -36,15 +36,11 @@ class GroupInfoScreen extends StatelessWidget {
               leading: const Icon(Icons.person_add),
               title: const Text('Добавить участников'),
               onTap: () async {
-                // TODO: открой свой экран выбора пользователей
-                // final selected = await Navigator.push<List<UserProfile>>(...);
-                // if (selected != null && selected.isNotEmpty) {
-                //   await roomService.addParticipants(room.id, selected);
-                // }
+              
               },
             ),
 
-          // Список участников
+          
           for (final uid in room.participants)
             ListTile(
               leading: UserAvatar(
@@ -79,12 +75,12 @@ class GroupInfoScreen extends StatelessWidget {
 
           const Divider(),
 
-          // Выйти из группы
+          
           ListTile(
             leading: const Icon(Icons.exit_to_app),
             title: const Text('Покинуть группу'),
             onTap: () async {
-              // Не используем BuildContext после await без проверки mounted
+              
               final nav = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
               try {
