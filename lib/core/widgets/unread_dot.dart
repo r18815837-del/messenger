@@ -23,7 +23,7 @@ class UnreadDot extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        // ВАЖНО: вызывать именно data(), а не data?
+        
         final lastReadAt = memberSnap.data?.data()?['lastReadAt'];
         final lastReadMs = (lastReadAt is Timestamp)
             ? lastReadAt.toDate().millisecondsSinceEpoch
