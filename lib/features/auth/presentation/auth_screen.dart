@@ -41,10 +41,10 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
 
-      // Гарантируем, что профиль users/{uid} создан/обновлён
+     
       final u = cred.user ?? FirebaseAuth.instance.currentUser;
       if (u != null) {
-        await ensureUserDoc(u); // <-- ВАЖНО: здесь создаём/мерджим профиль
+        await ensureUserDoc(u); 
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
