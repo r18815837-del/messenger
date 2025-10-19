@@ -8,7 +8,7 @@ import 'package:untitled/features/profile/presentation/profile_edit_screen.dart'
 import 'package:untitled/core/widgets/user_avatar.dart';
 import 'package:untitled/core/widgets/unread_dot.dart';
 import 'package:untitled/features/chat/presentation/create_group_screen.dart';
-import 'package:untitled/features/chat/presentation/call_screen.dart'; // ⬅️ NEW
+import 'package:untitled/features/chat/presentation/call_screen.dart'; 
 
 class ConversationsScreen extends StatefulWidget {
   const ConversationsScreen({super.key});
@@ -18,13 +18,13 @@ class ConversationsScreen extends StatefulWidget {
 }
 
 class _ConversationsScreenState extends State<ConversationsScreen> {
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _callSub; // ⬅️ NEW
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _callSub; 
 
   @override
   void initState() {
     super.initState();
 
-    // слушатель входящих звонков (без пушей)
+    )
     final me = FirebaseAuth.instance.currentUser;
     if (me != null) {
       _callSub = FirebaseFirestore.instance
@@ -58,7 +58,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
   @override
   void dispose() {
-    _callSub?.cancel(); // ⬅️ NEW
+    _callSub?.cancel();
     super.dispose();
   }
   Future<void> _startDmByEmail(BuildContext context) async {
@@ -99,7 +99,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     }
 
     try {
-      // Ищем по emailLower ИЛИ по email (на случай старых профилей без emailLower)
+      
       final q = await FirebaseFirestore.instance
           .collection('users')
           .where(Filter.or(
@@ -178,7 +178,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       appBar: AppBar(
         title: const Text('Чаты'),
         actions: [
-          // Профиль
+          
           IconButton(
             icon: const Icon(Icons.person),
             tooltip: 'Профиль',
@@ -186,7 +186,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
             ),
           ),
-          // Новый личный чат
+          
           IconButton(
             icon: const Icon(Icons.person_add_alt_1),
             tooltip: 'Новый личный чат',
@@ -217,7 +217,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               final last = (data['lastMessage'] as String?) ?? '';
 
               if (!isDm) {
-                // Публичный чат
+                
                 return ListTile(
                   leading: const UserAvatar(title: 'P'),
                   title: const Text('Общий чат'),
@@ -229,7 +229,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 );
               }
 
-              // DM: найдём собеседника
+             
               final other = otherUidFromRoom(roomId, me.uid);
               if (other == null) {
                 return ListTile(
@@ -273,7 +273,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           );
         },
       ),
-      // два FAB как один виджет
+     
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
