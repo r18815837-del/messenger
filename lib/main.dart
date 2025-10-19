@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'firebase_options.dart';
-import 'features/home/presentation/home_shell.dart'; // убедись что путь без двойного //
+import 'features/home/presentation/home_shell.dart'; 
 import 'features/auth/presentation/auth_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +13,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key}); // ✅ ключ проброшен в super
+  const MyApp({super.key}); 
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
           if (user == null) {
             return const AuthScreen();
           }
-          return const HomeShell(); // слушатель входящих звонков
+          return const HomeShell(); 
         },
       ),
     );
